@@ -1,4 +1,3 @@
 const Server = require('boardgame.io/server').Server;
-const TicTacToeGame = require('./TicTacToeGame').TicTacToeGame;
-const server = Server({ games: [TicTacToeGame] });
+const server = Server({ games: [require('./ECardGame').ECardGame] });
 server.run(8000);

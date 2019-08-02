@@ -1,38 +1,72 @@
 import React from 'react';
 import { Client } from 'boardgame.io/react';
-import { TicTacToeGame } from './TicTacToeGame';
-import { TicTacToeBoard } from './TicTacToeBoard';
+import { ECardGame } from './ECardGame';
+import { ECardBoard } from './ECardBoard';
+import SimpleCard from "./components/SimpleCard";
+import Card from '@material-ui/core/Card';
+import { makeStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
 
-const TicTacToeClient = Client({
-  game: TicTacToeGame,
-  board: TicTacToeBoard,
-  multiplayer: { server: 'localhost:8000' },
+const ECardClient = Client({
+  game: ECardGame,
+  board: ECardBoard,
+  debug: false,
+  multiplayer: { server: '10.54.4.150:8000' },
 });
 
-class App extends React.Component {
-  state = { playerID: null };
+function  App () {
+    const classes = useStyles();
+    const [{ playerID }, setState] = React.useState({ playerID: null });
 
-  render() {
-    if (this.state.playerID === null) {
+    if (playerID === null) {
       return (
-        <div>
-          <p>Play as</p>
-          <button onClick={() => this.setState({ playerID: "0" })}>
-            Slave
-          </button>
-          <button onClick={() => this.setState({ playerID: "1" })}>
-            Emperor
-          </button>
-        </div>
+          <Card className={classes.flexContainer}>
+              <Typography variant="h5" component="h2">
+                  Play as
+              </Typography>
+              <div className={classes.wrapper}>
+                  <SimpleCard type={'emperor'} handleClick={() => setState({ playerID: "0" })} />
+                  <SimpleCard type={'slave'} handleClick={() => setState({ playerID: "1" })} />
+              </div>
+          </Card>
       );
     }
 
     return (
       <div>
-        <TicTacToeClient playerID={this.state.playerID} />
+        <ECardClient playerID={playerID} />
       </div>
     );
-  }
-};
+}
+
+const useStyles =  makeStyles((theme) => ({
+    flexContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        alignItems: 'center',
+        height: '100vh',
+    },
+    wrapper: {
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        width: '100%',
+    },
+    card: {
+        minWidth: 275,
+    },
+    bullet: {
+        display: 'inline-block',
+        margin: '0 2px',
+        transform: 'scale(0.8)',
+    },
+    title: {
+        fontSize: 14,
+    },
+    pos: {
+        marginBottom: 12,
+    },
+}));
 
 export default App;

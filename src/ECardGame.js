@@ -1,26 +1,32 @@
 import { Game, TurnOrder } from 'boardgame.io/core';
 
 const getVictoryState = (board) => {
-  console.log('board', board);
   if (board.length === 2) {
-    const firstCard = board[0].name;
-    const secondCard = board[1].name;
+    const slaveCard = board[1];
+    const emperorCard = board[0];
+
+    if (slaveCard.side !== 'front' || emperorCard.side !== 'front') {
+      return {
+        isVictory: false,
+        winner: undefined,
+      };
+    }
 
     switch (true) {
-      case firstCard === 'slave' && secondCard === 'emperor':
+      case slaveCard.name === 'slave' && emperorCard.name === 'emperor':
+        return {
+          isVictory: true,
+          winner: 1,
+        };
+      case slaveCard.name === 'slave' && emperorCard.name === 'citizen':
         return {
           isVictory: true,
           winner: 0,
         };
-      case firstCard === 'slave' && secondCard === 'citizen':
+      case slaveCard.name === 'citizen' && emperorCard.name === 'emperor':
         return {
           isVictory: true,
-          winner: 1,
-        };
-      case firstCard === 'citizen' && secondCard === 'emperor':
-        return {
-          isVictory: true,
-          winner: 1,
+          winner: 0,
         };
       default:
         return {
@@ -52,11 +58,11 @@ const SlaveCard = {
 };
 
 const cards = {
-  0: [{...CitizenCard, id: 1}, {...CitizenCard, id: 2}, {...CitizenCard, id: 3}, {...CitizenCard, id: 4}, SlaveCard],
-  1: [{...CitizenCard, id: 5}, {...CitizenCard, id: 6}, {...CitizenCard, id: 7}, {...CitizenCard, id: 8}, EmperorCard],
+  0: [{...CitizenCard, id: 5}, {...CitizenCard, id: 6}, {...CitizenCard, id: 7}, {...CitizenCard, id: 8}, EmperorCard],
+  1: [{...CitizenCard, id: 1}, {...CitizenCard, id: 2}, {...CitizenCard, id: 3}, {...CitizenCard, id: 4}, SlaveCard],
 };
 
-export const TicTacToeGame = Game({
+export const ECardGame = Game({
   name: 'e-card',
 
   setup: (G, ctx, game) => {
@@ -87,6 +93,13 @@ export const TicTacToeGame = Game({
   },
 
   flow: {
+    TurnOrder: {
+      ...TurnOrder.DEFAULT,
+      first: () => {
+        return 1;
+      },
+    },
+
     movesPerTurn: 1,
 
     startingPhase: 'play',
@@ -94,7 +107,23 @@ export const TicTacToeGame = Game({
     phases: {
       play: {
         allowedMoves: ['playCard'],
-        endPhaseIf: (G) => G.board.length === 2,
+        endPhaseIf: (G) => {
+          const shownCardCount = G.board.reduce((acc, card) => {
+            if (card.side === 'front') {
+              return acc + 1;
+            }
+            return acc;
+          }, 0);
+
+          if (shownCardCount === 2) {
+            const state = getVictoryState(G.board);
+            if (!state.isVictory) {
+              G.board = [];
+            }
+          }
+
+          return G.board.length === 2;
+        },
         next: 'show',
       },
 
@@ -108,10 +137,6 @@ export const TicTacToeGame = Game({
             return acc;
           }, 0);
 
-          if (shownCardCount === 2) {
-            G.board = [];
-          }
-
           return shownCardCount === 2;
         },
         next: 'play',
@@ -119,16 +144,11 @@ export const TicTacToeGame = Game({
     },
 
     endTurnIf: (G, ctx) => {
-      if (!G.board.length) {
-        return { next: ctx.turn + 1 }
-      }
+      return { next: ctx.turn + 1 }
     },
 
     endGameIf: (G, ctx) => {
       const state = getVictoryState(G.board);
-
-      console.log('state', state);
-
       if (state.isVictory) {
         return { winner: state.winner };
       }
