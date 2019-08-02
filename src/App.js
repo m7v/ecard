@@ -1,26 +1,38 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Client } from 'boardgame.io/react';
+import { TicTacToeGame } from './TicTacToeGame';
+import { TicTacToeBoard } from './TicTacToeBoard';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const TicTacToeClient = Client({
+  game: TicTacToeGame,
+  board: TicTacToeBoard,
+  multiplayer: { server: 'localhost:8000' },
+});
+
+class App extends React.Component {
+  state = { playerID: null };
+
+  render() {
+    if (this.state.playerID === null) {
+      return (
+        <div>
+          <p>Play as</p>
+          <button onClick={() => this.setState({ playerID: "0" })}>
+            Slave
+          </button>
+          <button onClick={() => this.setState({ playerID: "1" })}>
+            Emperor
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <TicTacToeClient playerID={this.state.playerID} />
+      </div>
+    );
+  }
+};
 
 export default App;
